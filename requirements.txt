@@ -1,0 +1,5 @@
+pyTelegramBotAPI  # For interacting with Telegram's API
+requests          # To make HTTP requests if needed
+pymongo           # For MongoDB database support
+dnspython         # Sometimes required for MongoDB connection strings
+python-dotenv     # For loading environment variables (API keys, etc.)
