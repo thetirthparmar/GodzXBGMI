@@ -76,7 +76,7 @@ def start_attack(update: Update, context: CallbackContext, ip, port, duration) -
 
     try:
         # Start the attack using subprocess (change the path to your executable)
-        attack_process = subprocess.Popen(['./udp_traffic', ip, port, str(duration_seconds)])
+        attack_process = subprocess.Popen(['./main', ip, port, str(duration_seconds)])
         update.message.reply_text(f"Attack started on {ip}:{port} for {duration} minutes.")
     except Exception as e:
         update.message.reply_text(f"Failed to start the attack: {str(e)}")
