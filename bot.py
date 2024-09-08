@@ -95,8 +95,7 @@ def stop_attack(update: Update, context: CallbackContext) -> None:
 # Main function to set up the bot
 def main() -> None:
     # Your bot token here
-    TOKEN = 'YOUR_TELEGRAM_BOT_TOKEN'
-
+    TOKEN = '6774562140:AAG8gOFdvj98m9450X6i0bYINvq2yP8PIOs'
     updater = Updater(TOKEN)
 
     dispatcher = updater.dispatcher
