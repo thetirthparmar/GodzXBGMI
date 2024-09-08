@@ -12,8 +12,10 @@ char* ip;
 int port;
 int duration;  // Duration in seconds (after conversion from minutes)
 
-// Function to send UDP traffic (no changes in content or message size)
-void send_udp_traffic(void* arg1) {
+// Function to send UDP traffic
+void* send_udp_traffic(void* arg1) {
+    (void)arg1;  // Unused parameter
+
     int fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (fd < 0) {
         perror("Socket creation failed");
