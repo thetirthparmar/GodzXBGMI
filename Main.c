@@ -1,86 +1,59 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <pthread.h>
-#include <arpa/inet.h>
 #include <unistd.h>
+#include <arpa/inet.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <time.h>
-#include <sys/sysinfo.h>  // For getting the number of CPU cores
 
-// Global variables for IP, port, and duration
-char* ip;
-int port;
-int duration;  // Duration in seconds (after conversion from minutes)
+#define BUFFER_SIZE 8000
+#define PACKET_CONTENT "UDP traffic test"
 
-// Function to send UDP traffic
-void* send_udp_traffic(void* arg1) {
-    (void)arg1;  // Unused parameter
-
-    int fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (fd < 0) {
-        perror("Socket creation failed");
-        pthread_exit(NULL);
-    }
-
-    struct sockaddr_in addr;
-    memset(&addr, 0, sizeof(addr));
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(port);
-
-    if (inet_pton(AF_INET, ip, &addr.sin_addr) <= 0) {
-        perror("Invalid address/Address not supported");
-        close(fd);
-        pthread_exit(NULL);
-    }
-
-    char message[0x200];  // Packet size as per the original
-    snprintf(message, sizeof(message), "UDP traffic test");  // Keep message content the same
-
-    time_t end_time = time(NULL) + duration;
-    while (time(NULL) < end_time) {
-        if (sendto(fd, message, strlen(message), 0, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
-            perror("Send failed");
-            close(fd);
-            pthread_exit(NULL);
+void send_udp_traffic(int sockfd, struct sockaddr_in *dest_addr, int duration_seconds) {
+    char buffer[BUFFER_SIZE];
+    snprintf(buffer, sizeof(buffer), "%s", PACKET_CONTENT);
+    
+    time_t start_time = time(NULL);
+    while (difftime(time(NULL), start_time) < duration_seconds) {
+        ssize_t sent_len = sendto(sockfd, buffer, strlen(buffer), 0, 
+                                  (struct sockaddr *)dest_addr, sizeof(*dest_addr));
+        if (sent_len < 0) {
+            perror("sendto failed");
+            return;
         }
     }
-
-    close(fd);
-    pthread_exit(NULL);
 }
 
-// Main function (now takes IP, PORT, and DURATION in minutes)
-int main(int argc, char** argv) {
-    if (argc != 4) {  // Expect 3 arguments (IP, PORT, DURATION in minutes)
-        fprintf(stderr, "Usage: %s <IP> <PORT> <DURATION in minutes>\n", argv[0]);
-        exit(1);
+int main(int argc, char *argv[]) {
+    if (argc != 4) {
+        fprintf(stderr, "Usage: %s <target_ip> <target_port> <duration>\n", argv[0]);
+        exit(EXIT_FAILURE);
     }
 
-    // Assign the arguments
-    ip = argv[1];
-    port = atoi(argv[2]);
-    int duration_in_minutes = atoi(argv[3]);
+    const char *target_ip = argv[1];
+    int target_port = atoi(argv[2]);
+    int duration = atoi(argv[3]);
 
-    // Convert duration from minutes to seconds
-    duration = duration_in_minutes * 60;
-
-    // Automatically set threads based on the number of CPU cores
-    int threads = get_nprocs();  // Number of CPU cores
-
-    pthread_t thread[threads];
-
-    // Create threads
-    for (int i = 0; i < threads; i++) {
-        if (pthread_create(&thread[i], NULL, send_udp_traffic, NULL) != 0) {
-            perror("Thread creation failed");
-            exit(1);
-        }
+    int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sockfd < 0) {
+        perror("socket creation failed");
+        exit(EXIT_FAILURE);
     }
 
-    // Join threads
-    for (int i = 0; i < threads; i++) {
-        pthread_join(thread[i], NULL);
+    struct sockaddr_in dest_addr;
+    memset(&dest_addr, 0, sizeof(dest_addr));
+    dest_addr.sin_family = AF_INET;
+    dest_addr.sin_port = htons(target_port);
+
+    if (inet_pton(AF_INET, target_ip, &dest_addr.sin_addr) <= 0) {
+        fprintf(stderr, "Invalid address or address not supported\n");
+        close(sockfd);
+        exit(EXIT_FAILURE);
     }
 
+    send_udp_traffic(sockfd, &dest_addr, duration);
+
+    close(sockfd);
     return 0;
 }
